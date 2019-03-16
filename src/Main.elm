@@ -1,9 +1,12 @@
-module Main exposing (CheckItem, Checklist, Model, Msg(..), init, main, update, view)
+module Main exposing (main)
 
 import Browser
 import Browser.Navigation
+import Checklist exposing (Checklist)
+import Dict exposing (Dict)
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes as Attr exposing (src)
+import Html.Events as Events
 import Url exposing (Url)
 import Url.Parser as U exposing ((</>))
 
@@ -13,26 +16,9 @@ import Url.Parser as U exposing ((</>))
 
 
 type alias Model =
-    { checklists : List Checklist
+    { checklists : Dict Checklist.Id Checklist
     , page : Page
     , key : Browser.Navigation.Key
-    }
-
-
-type alias Checklist =
-    { id : ChecklistId
-    , name : String
-    , items : List CheckItem
-    }
-
-
-type alias ChecklistId =
-    Int
-
-
-type alias CheckItem =
-    { name : String
-    , checked : Bool
     }
 
 
@@ -42,7 +28,7 @@ type alias Flags =
 
 init : Flags -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
-    ( { checklists = [ { id = 1, name = "Back from Work", items = [] } ]
+    ( { checklists = Dict.fromList [ ( 1, { id = 1, name = "Back from Work", items = [] } ) ]
       , page = HomePage
       , key = key
       }
@@ -56,12 +42,12 @@ init flags url key =
 
 type Page
     = HomePage
-    | ChecklistPage ChecklistId
+    | ChecklistPage Checklist.Id
 
 
 type Route
     = HomeRoute
-    | ChecklistRoute ChecklistId
+    | ChecklistRoute Checklist.Id
 
 
 routes =
@@ -90,6 +76,8 @@ route url model =
 type Msg
     = UrlChange Url.Url
     | UrlRequest Browser.UrlRequest
+    | AddChecklist
+    | AddItem Checklist.Id
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -110,6 +98,20 @@ update msg model =
                     , Browser.Navigation.load url
                     )
 
+        AddChecklist ->
+            let
+                newChecklist =
+                    Checklist.empty (Dict.size model.checklists + 1)
+            in
+            ( { model | checklists = Dict.insert newChecklist.id newChecklist model.checklists }
+            , Browser.Navigation.pushUrl model.key (Checklist.url newChecklist.id)
+            )
+
+        AddItem checklistId ->
+            ( { model | checklists = Dict.update checklistId (Maybe.map Checklist.addItem) model.checklists }
+            , Cmd.none
+            )
+
 
 
 ---- VIEW ----
@@ -119,10 +121,13 @@ view : Model -> Browser.Document Msg
 view model =
     let
         viewChecklist checklist =
-            Html.a [ Attr.href ("/checklists/" ++ String.fromInt checklist.id) ] [ text checklist.name ]
+            Html.li []
+                [ Html.a [ Attr.href (Checklist.url checklist.id) ] [ text checklist.name ]
+                ]
 
         checklists =
-            List.map viewChecklist model.checklists
+            Dict.values model.checklists
+                |> List.map viewChecklist
     in
     case model.page of
         HomePage ->
@@ -130,23 +135,28 @@ view model =
             , body =
                 [ Html.main_ []
                     [ h1 [] [ text "Checklists" ]
-                    , Html.section [] checklists
+                    , Html.ul [] checklists
+                    , Html.button [ Events.onClick AddChecklist ] [ text "Add Checklist" ]
                     ]
                 ]
             }
 
         ChecklistPage checklistId ->
-            let
-                maybe =
-                    List.filter (\c -> c.id == checklistId) model.checklists
-                        |> List.head
-            in
-            case maybe of
+            case Dict.get checklistId model.checklists of
                 Just checklist ->
+                    let
+                        items =
+                            List.map viewItem checklist.items
+
+                        viewItem item =
+                            Html.li [] [ text item.name ]
+                    in
                     { title = checklist.name
                     , body =
                         [ Html.main_ []
                             [ h1 [] [ text checklist.name ]
+                            , Html.ul [] items
+                            , Html.button [ Events.onClick (AddItem checklist.id) ] [ text "Add Item" ]
                             ]
                         ]
                     }
