@@ -6,11 +6,15 @@ import Browser.Navigation
 import Checklist exposing (Checklist)
 import Css
 import Dict exposing (Dict)
+import File exposing (File)
+import File.Download
+import File.Select
 import Html.Styled as Html exposing (Html, div, h1, img, text)
 import Html.Styled.Attributes as Attr exposing (src)
 import Html.Styled.Events as Events
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Task
 import Url exposing (Url)
 import Url.Parser as U exposing ((</>))
 
@@ -95,6 +99,10 @@ type Msg
     | AddItem Checklist.Id
     | SetName String
     | CheckItem Checklist.Id Int Bool
+    | Download
+    | Load
+    | BackupLoaded File
+    | BackupDataLoaded (Result Decode.Error (List Checklist))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -167,6 +175,55 @@ update msg model =
             , save checklists
             )
 
+        Download ->
+            let
+                encodedChecklists =
+                    Dict.values model.checklists
+                        |> Encode.list Checklist.encode
+
+                data =
+                    Encode.object
+                        [ ( "version", Encode.int 1 )
+                        , ( "checklists", encodedChecklists )
+                        ]
+
+                jsonString =
+                    Encode.encode 4 data
+            in
+            ( model, File.Download.string "checklists.json" "application/json" jsonString )
+
+        Load ->
+            ( model
+            , File.Select.file [ "application/json" ] BackupLoaded
+            )
+
+        BackupLoaded file ->
+            let
+                decodeContents string =
+                    case Decode.decodeString decoder string of
+                        Ok data ->
+                            Task.succeed data
+
+                        Err err ->
+                            Task.fail err
+
+                decoder =
+                    Decode.field "checklists" (Decode.list Checklist.decoder)
+            in
+            ( model
+            , Task.attempt BackupDataLoaded (File.toString file |> Task.andThen decodeContents)
+            )
+
+        BackupDataLoaded result ->
+            case result of
+                Ok checklists ->
+                    ( { model | checklists = checklists |> List.map (\list -> ( list.id, list )) |> Dict.fromList }
+                    , Cmd.none
+                    )
+
+                Err error ->
+                    ( model, Cmd.none )
+
 
 
 ---- VIEW ----
@@ -218,6 +275,16 @@ view model =
                             , Attr.css [ buttonStyle ]
                             ]
                             [ text "Add Checklist" ]
+                        , Html.button
+                            [ Events.onClick Download
+                            , Attr.css [ buttonStyle ]
+                            ]
+                            [ text "Download" ]
+                        , Html.button
+                            [ Events.onClick Load
+                            , Attr.css [ buttonStyle ]
+                            ]
+                            [ text "Load/Restore" ]
                         ]
                     ]
                 }
