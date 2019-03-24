@@ -1,5 +1,6 @@
 port module Main exposing (main)
 
+import Array
 import Browser
 import Browser.Navigation
 import Checklist exposing (Checklist)
@@ -92,6 +93,7 @@ type Msg
     | AddChecklist
     | AddItem Checklist.Id
     | SetName String
+    | CheckItem Checklist.Id Int Bool
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -155,6 +157,15 @@ update msg model =
             , Cmd.none
             )
 
+        CheckItem checklistId itemIndex checked ->
+            let
+                checklists =
+                    Dict.update checklistId (Maybe.map (Checklist.setItem itemIndex checked)) model.checklists
+            in
+            ( { model | checklists = checklists }
+            , save checklists
+            )
+
 
 
 ---- VIEW ----
@@ -215,10 +226,21 @@ view model =
                     Just checklist ->
                         let
                             items =
-                                List.map viewItem checklist.items
+                                Array.indexedMap viewItem checklist.items
+                                    |> Array.toList
 
-                            viewItem item =
-                                Html.li [] [ text item.name ]
+                            viewItem index item =
+                                Html.li []
+                                    [ Html.label []
+                                        [ Html.input
+                                            [ Attr.type_ "checkbox"
+                                            , Events.onCheck (CheckItem checklistId index)
+                                            , Attr.checked item.checked
+                                            ]
+                                            []
+                                        , text item.name
+                                        ]
+                                    ]
                         in
                         { title = checklist.name
                         , body =

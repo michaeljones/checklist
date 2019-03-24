@@ -1,5 +1,6 @@
-module Checklist exposing (Checklist, Id, Item, addItem, decoder, encode, new, url)
+module Checklist exposing (Checklist, Id, Item, addItem, decoder, encode, new, setItem, url)
 
+import Array exposing (Array)
 import Json.Decode as Decode
 import Json.Encode as Encode
 
@@ -7,7 +8,7 @@ import Json.Encode as Encode
 type alias Checklist =
     { id : Id
     , name : String
-    , items : List Item
+    , items : Array Item
     }
 
 
@@ -30,13 +31,25 @@ new : Id -> String -> Checklist
 new id name =
     { id = id
     , name = name
-    , items = []
+    , items = Array.empty
     }
 
 
 addItem : String -> Checklist -> Checklist
 addItem name checklist =
-    { checklist | items = checklist.items ++ [ { name = name, checked = False } ] }
+    { checklist | items = Array.push { name = name, checked = False } checklist.items }
+
+
+setItem : Int -> Bool -> Checklist -> Checklist
+setItem index checked checklist =
+    let
+        items =
+            Array.get index checklist.items
+                |> Maybe.map (\item -> { item | checked = checked })
+                |> Maybe.map (\item -> Array.set index item checklist.items)
+                |> Maybe.withDefault checklist.items
+    in
+    { checklist | items = items }
 
 
 
@@ -54,7 +67,7 @@ decoder =
     Decode.map3 Checklist
         (Decode.field "id" Decode.int)
         (Decode.field "name" Decode.string)
-        (Decode.field "items" (Decode.list itemDecoder))
+        (Decode.field "items" (Decode.array itemDecoder))
 
 
 encode : Checklist -> Encode.Value
@@ -67,5 +80,5 @@ encode checklist =
     Encode.object
         [ ( "id", Encode.int checklist.id )
         , ( "name", Encode.string checklist.name )
-        , ( "items", Encode.list itemEncoder checklist.items )
+        , ( "items", Encode.array itemEncoder checklist.items )
         ]
