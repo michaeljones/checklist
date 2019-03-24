@@ -52,7 +52,6 @@ init flags url key =
 
         checklists =
             Decode.decodeValue (Decode.list Checklist.decoder) flags.checklists
-                |> Result.mapError (Debug.log "Decode Error")
                 |> Result.map (List.map (Checklist.refresh time))
                 |> Result.map (List.map (\checklist -> ( checklist.id, checklist )) >> Dict.fromList)
                 |> Result.withDefault Dict.empty
@@ -116,7 +115,7 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case Debug.log "msg" msg of
+    case msg of
         UrlChange url ->
             route url model
 
