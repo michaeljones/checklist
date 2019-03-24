@@ -1,9 +1,9 @@
 {
-  "short_name": "Elm App",
-  "name": "Create Elm App Sample",
+  "short_name": "Recurring",
+  "name": "Recurring",
   "icons": [
     {
-      "src": "favicon.ico",
+      "src": "recurring-192.png",
       "sizes": "192x192",
       "type": "image/png"
     }
