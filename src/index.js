@@ -15,7 +15,7 @@ try {
 
 const app = Elm.Main.init({
   node: document.getElementById('root'),
-  flags: {checklists: parsedChecklists},
+  flags: {checklists: parsedChecklists, time: new Date().getTime()},
 });
 
 app.ports.outPort.subscribe(message => {

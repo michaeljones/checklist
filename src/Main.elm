@@ -15,6 +15,7 @@ import Html.Styled.Events as Events
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Task
+import Time exposing (Posix)
 import Url exposing (Url)
 import Url.Parser as U exposing ((</>))
 
@@ -27,30 +28,37 @@ type alias Model =
     { checklists : Dict Checklist.Id Checklist
     , name : String
     , page : Page
+    , time : Posix
     , key : Browser.Navigation.Key
     }
 
 
 type alias Flags =
     { checklists : Decode.Value
+    , time : Float
     }
 
 
 init : Flags -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
-        checklists =
-            Decode.decodeValue (Decode.list Checklist.decoder) flags.checklists
-                |> Result.mapError (Debug.log "Decode Error")
-                |> Result.map (List.map (\checklist -> ( checklist.id, checklist )) >> Dict.fromList)
-                |> Result.withDefault Dict.empty
-
         model =
             { checklists = checklists
             , name = ""
             , page = HomePage
+            , time = time
             , key = key
             }
+
+        checklists =
+            Decode.decodeValue (Decode.list Checklist.decoder) flags.checklists
+                |> Result.mapError (Debug.log "Decode Error")
+                |> Result.map (List.map (Checklist.refresh time))
+                |> Result.map (List.map (\checklist -> ( checklist.id, checklist )) >> Dict.fromList)
+                |> Result.withDefault Dict.empty
+
+        time =
+            Time.millisToPosix (round flags.time)
     in
     route url model
 
@@ -95,6 +103,7 @@ route url model =
 type Msg
     = UrlChange Url.Url
     | UrlRequest Browser.UrlRequest
+    | Tick Posix
     | AddChecklist
     | AddItem Checklist.Id
     | SetName String
@@ -122,6 +131,11 @@ update msg model =
                     ( model
                     , Browser.Navigation.load url
                     )
+
+        Tick time ->
+            ( { model | time = time }
+            , Cmd.none
+            )
 
         AddChecklist ->
             if String.isEmpty model.name then
@@ -169,7 +183,14 @@ update msg model =
         CheckItem checklistId itemIndex checked ->
             let
                 checklists =
-                    Dict.update checklistId (Maybe.map (Checklist.setItem itemIndex checked)) model.checklists
+                    Dict.update checklistId (Maybe.map (Checklist.setItem itemIndex checkedTime)) model.checklists
+
+                checkedTime =
+                    if checked then
+                        Just model.time
+
+                    else
+                        Nothing
             in
             ( { model | checklists = checklists }
             , save checklists
@@ -298,12 +319,21 @@ view model =
                                     |> Array.toList
 
                             viewItem index item =
+                                let
+                                    checked =
+                                        case item.checked of
+                                            Just _ ->
+                                                True
+
+                                            Nothing ->
+                                                False
+                                in
                                 Html.li []
                                     [ Html.label []
                                         [ Html.input
                                             [ Attr.type_ "checkbox"
                                             , Events.onCheck (CheckItem checklistId index)
-                                            , Attr.checked item.checked
+                                            , Attr.checked checked
                                             ]
                                             []
                                         , text item.name
@@ -366,5 +396,5 @@ main =
         , onUrlRequest = UrlRequest
         , init = init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = always (Time.every (60 * 1000) Tick)
         }
