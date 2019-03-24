@@ -237,8 +237,12 @@ update msg model =
         BackupDataLoaded result ->
             case result of
                 Ok checklists ->
-                    ( { model | checklists = checklists |> List.map (\list -> ( list.id, list )) |> Dict.fromList }
-                    , Cmd.none
+                    let
+                        newChecklists =
+                            checklists |> List.map (\list -> ( list.id, list )) |> Dict.fromList
+                    in
+                    ( { model | checklists = newChecklists }
+                    , save newChecklists
                     )
 
                 Err error ->
