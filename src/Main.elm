@@ -40,14 +40,15 @@ init flags url key =
                 |> Result.mapError (Debug.log "Decode Error")
                 |> Result.map (List.map (\checklist -> ( checklist.id, checklist )) >> Dict.fromList)
                 |> Result.withDefault Dict.empty
+
+        model =
+            { checklists = checklists
+            , name = ""
+            , page = HomePage
+            , key = key
+            }
     in
-    ( { checklists = checklists
-      , name = ""
-      , page = HomePage
-      , key = key
-      }
-    , Cmd.none
-    )
+    route url model
 
 
 
