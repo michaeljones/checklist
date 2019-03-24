@@ -62,7 +62,7 @@ decoder =
         itemDecoder =
             Decode.map2 Item
                 (Decode.field "name" Decode.string)
-                (Decode.succeed False)
+                (Decode.field "checked" Decode.bool)
     in
     Decode.map3 Checklist
         (Decode.field "id" Decode.int)
@@ -75,7 +75,9 @@ encode checklist =
     let
         itemEncoder item =
             Encode.object
-                [ ( "name", Encode.string item.name ) ]
+                [ ( "name", Encode.string item.name )
+                , ( "checked", Encode.bool item.checked )
+                ]
     in
     Encode.object
         [ ( "id", Encode.int checklist.id )
