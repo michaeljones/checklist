@@ -84,7 +84,12 @@ routes =
 
 
 route url model =
-    case U.parse routes url of
+    let
+        parsedRoute =
+            { url | path = Maybe.withDefault "" url.fragment, fragment = Nothing }
+                |> U.parse routes
+    in
+    case parsedRoute of
         Nothing ->
             ( model, Cmd.none )
 
@@ -270,11 +275,34 @@ view model =
             , body = [ Html.toUnstyled (div [] body) ]
             }
 
+        headerStyle =
+            Css.batch
+                [ Css.padding (Css.px 20)
+                , Css.borderBottom3 (Css.px 1) Css.solid (Css.hex "#eeeeee")
+                , Css.backgroundColor (Css.hex "#1e2948")
+                ]
+
+        h1Style =
+            Css.batch
+                [ Css.margin Css.zero
+                , Css.textDecoration Css.none
+                ]
+
+        linkStyle =
+            Css.batch
+                [ Css.textDecoration Css.none
+                ]
+
+        h2Style =
+            Css.batch
+                [ Css.margin Css.zero
+                ]
+
         mainStyle =
             Css.batch
                 [ Css.displayFlex
                 , Css.flexDirection Css.column
-                , Css.margin (Css.px 20)
+                , Css.padding (Css.px 20)
                 ]
 
         buttonStyle =
@@ -288,11 +316,13 @@ view model =
     toUnstyled <|
         case model.page of
             HomePage ->
-                { title = "Checklists"
+                { title = "Recurring"
                 , body =
-                    [ Html.main_ [ Attr.css [ mainStyle ] ]
-                        [ h1 [] [ text "Checklists" ]
-                        , Html.ul [] checklists
+                    [ Html.header [ Attr.css [ headerStyle ] ]
+                        [ Html.a [ Attr.href "#/", Attr.css [ linkStyle ] ] [ Html.h1 [ Attr.css [ h1Style ] ] [ text "Recurring" ] ]
+                        ]
+                    , Html.main_ [ Attr.css [ mainStyle ] ]
+                        [ Html.ul [] checklists
                         , Html.input [ Attr.type_ "text", Events.onInput SetName, Attr.value model.name ] []
                         , Html.button
                             [ Events.onClick AddChecklist
@@ -343,10 +373,15 @@ view model =
                                         ]
                                     ]
                         in
-                        { title = checklist.name
+                        { title = checklist.name ++ " - Recurring"
                         , body =
-                            [ Html.main_ [ Attr.css [ mainStyle ] ]
-                                [ h1 [] [ text checklist.name ]
+                            [ Html.header [ Attr.css [ headerStyle ] ]
+                                [ Html.a [ Attr.href "#/", Attr.css [ linkStyle ] ]
+                                    [ Html.h1 [ Attr.css [ h1Style ] ] [ text "Recurring" ]
+                                    ]
+                                ]
+                            , Html.main_ [ Attr.css [ mainStyle ] ]
+                                [ Html.h2 [ Attr.css [ h2Style ] ] [ text checklist.name ]
                                 , Html.ul [] items
                                 , Html.input [ Attr.type_ "text", Events.onInput SetName, Attr.value model.name ] []
                                 , Html.button

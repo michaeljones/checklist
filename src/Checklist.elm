@@ -38,7 +38,7 @@ type alias Item =
 
 url : Id -> String
 url id =
-    "/checklists/" ++ String.fromInt id
+    "#/checklists/" ++ String.fromInt id
 
 
 new : Id -> String -> Checklist
