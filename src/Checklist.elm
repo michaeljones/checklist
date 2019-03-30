@@ -85,7 +85,7 @@ refresh time checklist =
                         item
 
         daysOld checkedTime =
-            Time.Extra.diff Time.Extra.Day Time.utc time checkedTime
+            Time.Extra.diff Time.Extra.Day Time.utc checkedTime time
     in
     { checklist | items = items }
 
