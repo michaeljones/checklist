@@ -33,13 +33,22 @@ all =
                             Array.fromList
                                 [ { name = "Item 1", checked = Nothing }
                                 , { name = "Item 2", checked = Just twoHoursAgo }
-                                , { name = "Item 3", checked = Just overOneDayAgo }
-                                , { name = "Item 4", checked = Just almostFiveDaysAgo }
+                                , { name = "Item 3", checked = Just fiveThisMorning }
+                                , { name = "Item 4", checked = Just twoThisMorning }
+                                , { name = "Item 5", checked = Just overOneDayAgo }
+                                , { name = "Item 6", checked = Just almostFiveDaysAgo }
+                                , { name = "Item 7", checked = Just almostFiveDaysAgo }
                                 ]
                         }
 
                     twoHoursAgo =
                         Parts 2019 Time.Mar 30 16 30 0 0 |> partsToPosix Time.utc
+
+                    fiveThisMorning =
+                        Parts 2019 Time.Mar 30 5 0 0 0 |> partsToPosix Time.utc
+
+                    twoThisMorning =
+                        Parts 2019 Time.Mar 30 2 0 0 0 |> partsToPosix Time.utc
 
                     overOneDayAgo =
                         Parts 2019 Time.Mar 29 18 29 0 0 |> partsToPosix Time.utc
@@ -57,8 +66,11 @@ all =
                                 Array.fromList
                                     [ { name = "Item 1", checked = Nothing }
                                     , { name = "Item 2", checked = Just twoHoursAgo }
-                                    , { name = "Item 3", checked = Nothing }
+                                    , { name = "Item 3", checked = Just fiveThisMorning }
                                     , { name = "Item 4", checked = Nothing }
+                                    , { name = "Item 5", checked = Nothing }
+                                    , { name = "Item 6", checked = Nothing }
+                                    , { name = "Item 7", checked = Nothing }
                                     ]
                         }
         ]

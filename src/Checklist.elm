@@ -92,14 +92,23 @@ refreshDaily time checklist =
                     item
 
                 Just checkedTime ->
-                    if daysOld checkedTime >= 1 then
+                    if Time.posixToMillis checkedTime <= Time.posixToMillis cutOff then
                         { item | checked = Nothing }
 
                     else
                         item
 
-        daysOld checkedTime =
-            Time.Extra.diff Time.Extra.Day Time.utc checkedTime time
+        cutOff =
+            { timeInParts
+                | hour = 4
+                , minute = 0
+                , second = 0
+                , millisecond = 0
+            }
+                |> Time.Extra.partsToPosix Time.utc
+
+        timeInParts =
+            Time.Extra.posixToParts Time.utc time
     in
     { checklist | items = items }
 
