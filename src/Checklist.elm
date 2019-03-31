@@ -2,6 +2,7 @@ module Checklist exposing
     ( Checklist
     , Id
     , Item
+    , RefreshMode(..)
     , addItem
     , decoder
     , encode
@@ -22,6 +23,7 @@ import Time.Extra
 type alias Checklist =
     { id : Id
     , name : String
+    , refresh : RefreshMode
     , items : Array Item
     }
 
@@ -36,6 +38,10 @@ type alias Item =
     }
 
 
+type RefreshMode
+    = Daily
+
+
 url : Id -> String
 url id =
     "#/checklists/" ++ String.fromInt id
@@ -45,6 +51,7 @@ new : Id -> String -> Checklist
 new id name =
     { id = id
     , name = name
+    , refresh = Daily
     , items = Array.empty
     }
 
@@ -68,6 +75,13 @@ setItem index checked checklist =
 
 refresh : Posix -> Checklist -> Checklist
 refresh time checklist =
+    case checklist.refresh of
+        Daily ->
+            refreshDaily time checklist
+
+
+refreshDaily : Posix -> Checklist -> Checklist
+refreshDaily time checklist =
     let
         items =
             Array.map refreshItem checklist.items
@@ -102,10 +116,25 @@ decoder =
                 (Decode.field "name" Decode.string)
                 (Decode.field "checked" (Decode.maybe Iso8601.decoder))
     in
-    Decode.map3 Checklist
+    Decode.map4 Checklist
         (Decode.field "id" Decode.int)
         (Decode.field "name" Decode.string)
+        (Decode.field "refresh" refreshDecoder)
         (Decode.field "items" (Decode.array itemDecoder))
+
+
+refreshDecoder : Decode.Decoder RefreshMode
+refreshDecoder =
+    Decode.string
+        |> Decode.andThen
+            (\string ->
+                case string of
+                    "daily" ->
+                        Decode.succeed Daily
+
+                    _ ->
+                        Decode.fail <| "Unrecognised refresh mode: " ++ string
+            )
 
 
 encode : Checklist -> Encode.Value
@@ -120,5 +149,13 @@ encode checklist =
     Encode.object
         [ ( "id", Encode.int checklist.id )
         , ( "name", Encode.string checklist.name )
+        , ( "refresh", encodeRefresh checklist.refresh )
         , ( "items", Encode.array itemEncoder checklist.items )
         ]
+
+
+encodeRefresh : RefreshMode -> Encode.Value
+encodeRefresh refresh_ =
+    case refresh_ of
+        Daily ->
+            Encode.string "daily"

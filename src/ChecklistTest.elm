@@ -28,6 +28,7 @@ all =
                     checklist =
                         { id = 1
                         , name = "Test List"
+                        , refresh = Checklist.Daily
                         , items =
                             Array.fromList
                                 [ { name = "Item 1", checked = Nothing }
