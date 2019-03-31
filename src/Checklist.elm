@@ -40,6 +40,7 @@ type alias Item =
 
 type RefreshMode
     = Daily
+    | OnCompletion
 
 
 url : Id -> String
@@ -79,6 +80,9 @@ refresh time checklist =
         Daily ->
             refreshDaily time checklist
 
+        OnCompletion ->
+            refreshOnCompletion checklist
+
 
 refreshDaily : Posix -> Checklist -> Checklist
 refreshDaily time checklist =
@@ -113,6 +117,30 @@ refreshDaily time checklist =
     { checklist | items = items }
 
 
+refreshOnCompletion : Checklist -> Checklist
+refreshOnCompletion checklist =
+    let
+        listIsComplete =
+            List.all itemIsComplete <| Array.toList checklist.items
+
+        itemIsComplete item =
+            case item.checked of
+                Just _ ->
+                    True
+
+                Nothing ->
+                    False
+
+        uncheckItem item =
+            { item | checked = Nothing }
+    in
+    if listIsComplete then
+        { checklist | items = Array.map uncheckItem checklist.items }
+
+    else
+        checklist
+
+
 
 ---- JSON ----
 
@@ -141,6 +169,9 @@ refreshDecoder =
                     "daily" ->
                         Decode.succeed Daily
 
+                    "on-completion" ->
+                        Decode.succeed OnCompletion
+
                     _ ->
                         Decode.fail <| "Unrecognised refresh mode: " ++ string
             )
@@ -168,3 +199,6 @@ encodeRefresh refresh_ =
     case refresh_ of
         Daily ->
             Encode.string "daily"
+
+        OnCompletion ->
+            Encode.string "on-completion"
