@@ -5,6 +5,7 @@ import Browser
 import Browser.Navigation
 import Checklist exposing (Checklist)
 import Css
+import DateFormat as DF
 import Dict exposing (Dict)
 import File exposing (File)
 import File.Download
@@ -214,8 +215,26 @@ update msg model =
 
                 jsonString =
                     Encode.encode 4 data
+
+                datePart =
+                    DF.format
+                        [ DF.yearNumber
+                        , DF.text "-"
+                        , DF.monthNameAbbreviated
+                        , DF.text "-"
+                        , DF.dayOfMonthNumber
+                        , DF.text "--"
+                        , DF.hourMilitaryNumber
+                        , DF.text "-"
+                        , DF.minuteNumber
+                        ]
+                        Time.utc
+                        model.time
+
+                name =
+                    "recurring-" ++ datePart ++ ".json"
             in
-            ( model, File.Download.string "checklists.json" "application/json" jsonString )
+            ( model, File.Download.string name "application/json" jsonString )
 
         Load ->
             ( model
