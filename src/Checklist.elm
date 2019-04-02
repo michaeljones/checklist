@@ -151,12 +151,22 @@ decoder =
         itemDecoder =
             Decode.map2 Item
                 (Decode.field "name" Decode.string)
-                (Decode.field "checked" (Decode.maybe Iso8601.decoder))
+                (Decode.field "checked" checkedDecoder)
+
+        checkedDecoder =
+            Decode.oneOf
+                [ Decode.maybe Iso8601.decoder
+                , Decode.bool |> Decode.map (always Nothing)
+                ]
+
+        refreshField =
+            Decode.maybe (Decode.field "refresh" refreshDecoder)
+                |> Decode.map (Maybe.withDefault Daily)
     in
     Decode.map4 Checklist
         (Decode.field "id" Decode.int)
         (Decode.field "name" Decode.string)
-        (Decode.field "refresh" refreshDecoder)
+        refreshField
         (Decode.field "items" (Decode.array itemDecoder))
 
 
