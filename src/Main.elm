@@ -7,10 +7,14 @@ import Checklist exposing (Checklist)
 import Css
 import DateFormat as DF
 import Dict exposing (Dict)
+import Element as E exposing (Element)
+import Element.Background as Background
+import Element.Border as Border
+import Element.Font as Font
 import File exposing (File)
 import File.Download
 import File.Select
-import Html.Styled as Html exposing (Html, div, h1, img, text)
+import Html.Styled as Html exposing (Html)
 import Html.Styled.Attributes as Attr exposing (src)
 import Html.Styled.Events as Events
 import Json.Decode as Decode
@@ -312,11 +316,23 @@ viewResult modelResult =
         Ok model ->
             view model
 
-        Err err ->
-            toUnstyledDocument <|
-                { title = "Error"
-                , body = [ Html.text err ]
-                }
+        Err errorText ->
+            { title = "Error - Checklist"
+            , body = [ E.layout [] (errorDisplay errorText) ]
+            }
+
+
+errorDisplay : String -> Element msg
+errorDisplay errorText =
+    E.row [ E.width E.fill, E.centerY, E.spacing 30 ]
+        [ E.el [ E.centerX ]
+            (E.el
+                [ Background.color (E.rgb255 230 230 230)
+                , E.padding 20
+                ]
+                (E.text errorText)
+            )
+        ]
 
 
 view : Model -> Browser.Document Msg
@@ -324,7 +340,7 @@ view model =
     let
         viewChecklist checklist =
             Html.li []
-                [ Html.a [ Attr.href (Checklist.url checklist.id) ] [ text checklist.name ]
+                [ Html.a [ Attr.href (Checklist.url checklist.id) ] [ Html.text checklist.name ]
                 ]
 
         checklists =
@@ -375,7 +391,7 @@ view model =
                 { title = "Recurring"
                 , body =
                     [ Html.header [ Attr.css [ headerStyle ] ]
-                        [ Html.a [ Attr.href "#/", Attr.css [ linkStyle ] ] [ Html.h1 [ Attr.css [ h1Style ] ] [ text "Recurring" ] ]
+                        [ Html.a [ Attr.href "#/", Attr.css [ linkStyle ] ] [ Html.h1 [ Attr.css [ h1Style ] ] [ Html.text "Recurring" ] ]
                         ]
                     , Html.main_ [ Attr.css [ mainStyle ] ]
                         [ Html.ul [] checklists
@@ -384,17 +400,17 @@ view model =
                             [ Events.onClick AddChecklist
                             , Attr.css [ buttonStyle ]
                             ]
-                            [ text "Add Checklist" ]
+                            [ Html.text "Add Checklist" ]
                         , Html.button
                             [ Events.onClick Download
                             , Attr.css [ buttonStyle ]
                             ]
-                            [ text "Download" ]
+                            [ Html.text "Download" ]
                         , Html.button
                             [ Events.onClick Load
                             , Attr.css [ buttonStyle ]
                             ]
-                            [ text "Load/Restore" ]
+                            [ Html.text "Load/Restore" ]
                         ]
                     ]
                 }
@@ -417,7 +433,7 @@ view model =
 
                             viewLink link =
                                 Html.li []
-                                    [ Html.a [ Attr.href link.url ] [ text link.name ]
+                                    [ Html.a [ Attr.href link.url ] [ Html.text link.name ]
                                     ]
 
                             viewItem index item =
@@ -429,7 +445,7 @@ view model =
                                             , Attr.checked (checked item)
                                             ]
                                             []
-                                        , text item.name
+                                        , Html.text item.name
                                         ]
                                     , Html.ul [] (Array.map viewLink item.links |> Array.toList)
                                     ]
@@ -438,32 +454,32 @@ view model =
                         , body =
                             [ Html.header [ Attr.css [ headerStyle ] ]
                                 [ Html.a [ Attr.href "#/", Attr.css [ linkStyle ] ]
-                                    [ Html.h1 [ Attr.css [ h1Style ] ] [ text "Recurring" ]
+                                    [ Html.h1 [ Attr.css [ h1Style ] ] [ Html.text "Recurring" ]
                                     ]
                                 ]
                             , Html.main_ [ Attr.css [ mainStyle ] ]
-                                [ Html.h2 [ Attr.css [ h2Style ] ] [ text checklist.name ]
+                                [ Html.h2 [ Attr.css [ h2Style ] ] [ Html.text checklist.name ]
                                 , Html.ul [] items
                                 , Html.input [ Attr.type_ "text", Events.onInput SetName, Attr.value model.name ] []
                                 , Html.button
                                     [ Events.onClick (AddItem checklist.id)
                                     , Attr.css [ buttonStyle ]
                                     ]
-                                    [ text "Add Item" ]
+                                    [ Html.text "Add Item" ]
                                 ]
                             ]
                         }
 
                     Nothing ->
                         { title = "404 - Page Not Found"
-                        , body = [ text "404" ]
+                        , body = [ Html.text "404" ]
                         }
 
 
 toUnstyledDocument : { title : String, body : List (Html msg) } -> Browser.Document msg
 toUnstyledDocument { title, body } =
     { title = title
-    , body = [ Html.toUnstyled (div [] body) ]
+    , body = [ Html.toUnstyled (Html.div [] body) ]
     }
 
 

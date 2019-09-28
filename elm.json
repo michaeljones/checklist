@@ -14,6 +14,7 @@
             "elm/time": "1.0.0",
             "elm/url": "1.0.0",
             "justinmimbs/time-extra": "1.1.0",
+            "mdgriffith/elm-ui": "1.1.5",
             "rtfeldman/elm-css": "16.0.0",
             "rtfeldman/elm-iso8601-date-strings": "1.1.2",
             "ryannhg/date-format": "2.3.0"
