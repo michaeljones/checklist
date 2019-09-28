@@ -25,6 +25,20 @@ import Url.Parser as U exposing ((</>))
 ---- MODEL ----
 
 
+type alias ModelResult =
+    Result String Model
+
+
+extract : Result String ( Model, Cmd Msg ) -> ( ModelResult, Cmd Msg )
+extract result =
+    case result of
+        Ok ( model, cmd ) ->
+            ( Ok model, cmd )
+
+        Err err ->
+            ( Err err, Cmd.none )
+
+
 type alias Model =
     { checklists : Dict Checklist.Id Checklist
     , name : String
@@ -40,27 +54,36 @@ type alias Flags =
     }
 
 
-init : Flags -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
-init flags url key =
+initResult : Flags -> Url -> Browser.Navigation.Key -> ( ModelResult, Cmd Msg )
+initResult flags url key =
     let
-        model =
-            { checklists = checklists
-            , name = ""
-            , page = HomePage
-            , time = time
-            , key = key
-            }
+        time =
+            Time.millisToPosix (round flags.time)
 
         checklists =
             Decode.decodeValue (Decode.list Checklist.decoder) flags.checklists
                 |> Result.map (List.map (Checklist.refresh time))
                 |> Result.map (List.map (\checklist -> ( checklist.id, checklist )) >> Dict.fromList)
-                |> Result.withDefault Dict.empty
 
-        time =
-            Time.millisToPosix (round flags.time)
+        modelResult =
+            Ok Model
+                |> applyResult checklists
+                |> apply ""
+                |> apply HomePage
+                |> apply time
+                |> apply key
+                |> Result.map (route url)
+                |> Result.mapError Decode.errorToString
     in
-    route url model
+    extract modelResult
+
+
+applyResult result resultFn =
+    Result.map2 (\value fn -> fn value) result resultFn
+
+
+apply value resultFn =
+    Result.map (\fn -> fn value) resultFn
 
 
 
@@ -117,6 +140,12 @@ type Msg
     | Load
     | BackupLoaded File
     | BackupDataLoaded (Result Decode.Error (List Checklist))
+
+
+updateResult : Msg -> ModelResult -> ( ModelResult, Cmd Msg )
+updateResult msg model =
+    Result.map (update msg) model
+        |> extract
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -277,6 +306,19 @@ update msg model =
 ---- VIEW ----
 
 
+viewResult : ModelResult -> Browser.Document Msg
+viewResult modelResult =
+    case modelResult of
+        Ok model ->
+            view model
+
+        Err err ->
+            toUnstyledDocument <|
+                { title = "Error"
+                , body = [ Html.text err ]
+                }
+
+
 view : Model -> Browser.Document Msg
 view model =
     let
@@ -288,11 +330,6 @@ view model =
         checklists =
             Dict.values model.checklists
                 |> List.map viewChecklist
-
-        toUnstyled { title, body } =
-            { title = title
-            , body = [ Html.toUnstyled (div [] body) ]
-            }
 
         headerStyle =
             Css.batch
@@ -332,7 +369,7 @@ view model =
                 , Css.backgroundColor (Css.hex "#cccccc")
                 ]
     in
-    toUnstyled <|
+    toUnstyledDocument <|
         case model.page of
             HomePage ->
                 { title = "Recurring"
@@ -423,6 +460,13 @@ view model =
                         }
 
 
+toUnstyledDocument : { title : String, body : List (Html msg) } -> Browser.Document msg
+toUnstyledDocument { title, body } =
+    { title = title
+    , body = [ Html.toUnstyled (div [] body) ]
+    }
+
+
 
 ---- PORTS ----
 
@@ -450,13 +494,13 @@ save checklists =
 ---- PROGRAM ----
 
 
-main : Program Flags Model Msg
+main : Program Flags ModelResult Msg
 main =
     Browser.application
-        { view = view
+        { init = initResult
+        , update = updateResult
+        , view = viewResult
+        , subscriptions = always (Time.every (60 * 1000) Tick)
         , onUrlChange = UrlChange
         , onUrlRequest = UrlRequest
-        , init = init
-        , update = update
-        , subscriptions = always (Time.every (60 * 1000) Tick)
         }
