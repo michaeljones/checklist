@@ -370,26 +370,31 @@ view model =
                                 Array.indexedMap viewItem checklist.items
                                     |> Array.toList
 
-                            viewItem index item =
-                                let
-                                    checked =
-                                        case item.checked of
-                                            Just _ ->
-                                                True
+                            checked item =
+                                case item.checked of
+                                    Just _ ->
+                                        True
 
-                                            Nothing ->
-                                                False
-                                in
+                                    Nothing ->
+                                        False
+
+                            viewLink link =
+                                Html.li []
+                                    [ Html.a [ Attr.href link.url ] [ text link.name ]
+                                    ]
+
+                            viewItem index item =
                                 Html.li []
                                     [ Html.label []
                                         [ Html.input
                                             [ Attr.type_ "checkbox"
                                             , Events.onCheck (CheckItem checklistId index)
-                                            , Attr.checked checked
+                                            , Attr.checked (checked item)
                                             ]
                                             []
                                         , text item.name
                                         ]
+                                    , Html.ul [] (Array.map viewLink item.links |> Array.toList)
                                     ]
                         in
                         { title = checklist.name ++ " - Recurring"

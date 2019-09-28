@@ -35,6 +35,13 @@ type alias Id =
 type alias Item =
     { name : String
     , checked : Maybe Posix
+    , links : Array Link
+    }
+
+
+type alias Link =
+    { name : String
+    , url : String
     }
 
 
@@ -59,7 +66,7 @@ new id name =
 
 addItem : String -> Checklist -> Checklist
 addItem name checklist =
-    { checklist | items = Array.push { name = name, checked = Nothing } checklist.items }
+    { checklist | items = Array.push { name = name, checked = Nothing, links = Array.empty } checklist.items }
 
 
 setItem : Int -> Maybe Posix -> Checklist -> Checklist
@@ -148,10 +155,16 @@ refreshOnCompletion checklist =
 decoder : Decode.Decoder Checklist
 decoder =
     let
+        linkDecoder =
+            Decode.map2 Link
+                (Decode.field "name" Decode.string)
+                (Decode.field "url" Decode.string)
+
         itemDecoder =
-            Decode.map2 Item
+            Decode.map3 Item
                 (Decode.field "name" Decode.string)
                 (Decode.field "checked" checkedDecoder)
+                (Decode.field "links" (Decode.oneOf [ Decode.array linkDecoder, Decode.succeed Array.empty ]))
 
         checkedDecoder =
             Decode.oneOf
@@ -194,6 +207,7 @@ encode checklist =
             Encode.object
                 [ ( "name", Encode.string item.name )
                 , ( "checked", Maybe.map Iso8601.encode item.checked |> Maybe.withDefault Encode.null )
+                , ( "links", Encode.array encodeLink item.links )
                 ]
     in
     Encode.object
@@ -212,3 +226,11 @@ encodeRefresh refresh_ =
 
         OnCompletion ->
             Encode.string "on-completion"
+
+
+encodeLink : Link -> Encode.Value
+encodeLink link =
+    Encode.object
+        [ ( "name", Encode.string link.name )
+        , ( "url", Encode.string link.url )
+        ]
