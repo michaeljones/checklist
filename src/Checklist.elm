@@ -15,6 +15,7 @@ module Checklist exposing
 import Array exposing (Array)
 import Iso8601
 import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
 import Time exposing (Posix)
 import Time.Extra
@@ -156,15 +157,15 @@ decoder : Decode.Decoder Checklist
 decoder =
     let
         linkDecoder =
-            Decode.map2 Link
-                (Decode.field "name" Decode.string)
-                (Decode.field "url" Decode.string)
+            Decode.succeed Link
+                |> required "name" Decode.string
+                |> required "url" Decode.string
 
         itemDecoder =
-            Decode.map3 Item
-                (Decode.field "name" Decode.string)
-                (Decode.field "checked" checkedDecoder)
-                (Decode.field "links" (Decode.oneOf [ Decode.array linkDecoder, Decode.succeed Array.empty ]))
+            Decode.succeed Item
+                |> required "name" Decode.string
+                |> required "checked" checkedDecoder
+                |> optional "links" (Decode.array linkDecoder) Array.empty
 
         checkedDecoder =
             Decode.oneOf
