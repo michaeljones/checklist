@@ -52,8 +52,21 @@ type alias Model =
     }
 
 
+encodeData : Model -> Encode.Value
+encodeData model =
+    let
+        encodedChecklists =
+            Dict.values model.checklists
+                |> Encode.list Checklist.encode
+    in
+    Encode.object
+        [ ( "version", Encode.int 1 )
+        , ( "checklists", encodedChecklists )
+        ]
+
+
 type alias Flags =
-    { checklists : Decode.Value
+    { data : Decode.Value
     , time : Float
     }
 
@@ -65,7 +78,7 @@ initResult flags url key =
             Time.millisToPosix (round flags.time)
 
         checklists =
-            Decode.decodeValue (Decode.list Checklist.decoder) flags.checklists
+            Decode.decodeValue (Decode.field "checklists" (Decode.list Checklist.decoder)) flags.data
                 |> Result.map (List.map (Checklist.refresh time))
                 |> Result.map (List.map (\checklist -> ( checklist.id, checklist )) >> Dict.fromList)
 
@@ -186,14 +199,17 @@ update msg model =
 
                     checklists =
                         Dict.insert newChecklist.id newChecklist model.checklists
+
+                    newModel =
+                        { model
+                            | checklists = checklists
+                            , name = ""
+                        }
                 in
-                ( { model
-                    | checklists = checklists
-                    , name = ""
-                  }
+                ( newModel
                 , Cmd.batch
                     [ Browser.Navigation.pushUrl model.key (Checklist.url newChecklist.id)
-                    , save checklists
+                    , save newModel
                     ]
                 )
 
@@ -205,12 +221,15 @@ update msg model =
                 let
                     checklists =
                         Dict.update checklistId (Maybe.map (Checklist.addItem model.name)) model.checklists
+
+                    newModel =
+                        { model
+                            | checklists = checklists
+                            , name = ""
+                        }
                 in
-                ( { model
-                    | checklists = checklists
-                    , name = ""
-                  }
-                , save checklists
+                ( newModel
+                , save newModel
                 )
 
         SetName string ->
@@ -229,22 +248,18 @@ update msg model =
 
                     else
                         Nothing
+
+                newModel =
+                    { model | checklists = checklists }
             in
-            ( { model | checklists = checklists }
-            , save checklists
+            ( newModel
+            , save newModel
             )
 
         Download ->
             let
-                encodedChecklists =
-                    Dict.values model.checklists
-                        |> Encode.list Checklist.encode
-
                 data =
-                    Encode.object
-                        [ ( "version", Encode.int 1 )
-                        , ( "checklists", encodedChecklists )
-                        ]
+                    encodeData model
 
                 jsonString =
                     Encode.encode 4 data
@@ -297,9 +312,12 @@ update msg model =
                     let
                         newChecklists =
                             checklists |> List.map (\list -> ( list.id, list )) |> Dict.fromList
+
+                        newModel =
+                            { model | checklists = newChecklists }
                     in
-                    ( { model | checklists = newChecklists }
-                    , save newChecklists
+                    ( newModel
+                    , save newModel
                     )
 
                 Err error ->
@@ -490,17 +508,13 @@ toUnstyledDocument { title, body } =
 port outPort : Encode.Value -> Cmd msg
 
 
-save : Dict Checklist.Id Checklist -> Cmd msg
-save checklists =
+save : Model -> Cmd msg
+save model =
     let
-        encoded =
-            Dict.values checklists
-                |> Encode.list Checklist.encode
-
         portMsg =
             Encode.object
                 [ ( "type", Encode.string "save" )
-                , ( "data", encoded )
+                , ( "data", encodeData model )
                 ]
     in
     outPort portMsg
