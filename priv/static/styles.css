@@ -1,0 +1,69 @@
+body {
+  font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande',
+    'Bitstream Vera Sans', 'Helvetica Neue', sans-serif;
+  margin: 0;
+  color: #dddddd;
+  background-color: #283866;
+}
+
+a {
+  color: #cccccc;
+}
+
+a:visited {
+  color: #bbbbbb;
+}
+
+h1 {
+  font-size: 30px;
+}
+
+img {
+  margin: 20px 0;
+  max-width: 200px;
+}
+
+.header {
+  padding: 20px;
+  border-bottom: 1px solid #eeeeee;
+  background-color: #1e2948;
+}
+
+.header-link {
+  text-decoration: none;
+}
+
+.header-title {
+  margin: 0;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.checklist-title {
+  margin: 0;
+}
+
+.action-button {
+  margin-top: 10px;
+  border: 0;
+  padding: 5px;
+  background-color: #cccccc;
+}
+
+.error-container {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.error-box {
+  background-color: #e6e6e6;
+  padding: 20px;
+  color: #333;
+}

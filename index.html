@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="shortcut icon" href="./recurring-192.png">
+    <link rel="icon" sizes="192x192" href="./recurring-192.png">
+    <link rel="stylesheet" href="./priv/static/styles.css">
+    <title>Recurring</title>
+    <script>
+      // GitHub Pages SPA redirect support
+      (function() {
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== location.href) {
+          history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
+</head>
+<body>
+    <noscript>
+        You need to enable JavaScript to run this app.
+    </noscript>
+    <div id="app"></div>
+    <script type="module">
+      import { main } from "./build/dev/javascript/checklist/checklist.mjs";
+      main();
+    </script>
+</body>
+</html>
