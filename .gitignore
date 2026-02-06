@@ -6,3 +6,7 @@ node_modules
 
 # Desktop Services Store on macOS
 .DS_Store
+
+#Added automatically by Lustre Dev Tools
+/.lustre
+/dist
