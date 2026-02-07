@@ -12,9 +12,15 @@ layout {
         }
     }
 
-    tab name="watch" cwd="." {
+    tab name="lustre-dev" cwd="." {
+    }
+
+    tab name="watch-css" cwd="." {
     }
     
+    tab name="claude" cwd="." {
+    }
+
     tab name="root" cwd="." {
     }
 }

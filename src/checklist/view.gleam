@@ -19,9 +19,14 @@ pub fn view(model: Model) -> Element(Msg) {
 }
 
 fn error_view(err: String) -> Element(Msg) {
-  html.div([attribute.class("error-container")], [
-    html.div([attribute.class("error-box")], [html.text(err)]),
-  ])
+  html.div(
+    [attribute.class("flex w-full justify-center items-center min-h-screen")],
+    [
+      html.div([attribute.class("bg-red/20 p-5 rounded-lg text-maroon")], [
+        html.text(err),
+      ]),
+    ],
+  )
 }
 
 fn route_view(model: Model) -> Element(Msg) {
@@ -33,9 +38,9 @@ fn route_view(model: Model) -> Element(Msg) {
 }
 
 fn header_el() -> Element(Msg) {
-  html.header([attribute.class("header")], [
-    html.a([attribute.href("/"), attribute.class("header-link")], [
-      html.h1([attribute.class("header-title")], [html.text("Recurring")]),
+  html.header([attribute.class("p-5 border-b border-surface0 bg-mantle")], [
+    html.a([attribute.href("/"), attribute.class("no-underline text-text")], [
+      html.h1([attribute.class("m-0 text-3xl")], [html.text("Recurring")]),
     ]),
   ])
 }
@@ -44,32 +49,54 @@ fn home_view(model: Model) -> Element(Msg) {
   let checklist_items =
     dict.values(model.checklists)
     |> list.map(fn(checklist) {
-      html.li([], [
-        html.a([attribute.href(data.url(checklist.id))], [
-          html.text(checklist.name),
-        ]),
+      html.li([attribute.class("py-1")], [
+        html.a(
+          [
+            attribute.href(data.url(checklist.id)),
+            attribute.class("text-blue hover:text-sapphire"),
+          ],
+          [html.text(checklist.name)],
+        ),
       ])
     })
 
   html.div([], [
     header_el(),
-    html.main([attribute.class("main-content")], [
-      html.ul([], checklist_items),
+    html.main([attribute.class("flex flex-col p-5 gap-3")], [
+      html.ul([attribute.class("list-none p-0 m-0")], checklist_items),
       html.input([
         attribute.type_("text"),
         attribute.value(model.name),
         event.on_input(SetName),
+        attribute.class(
+          "bg-surface0 text-text border border-surface1 rounded px-3 py-2 outline-none focus:border-mauve",
+        ),
       ]),
       html.button(
-        [event.on_click(AddChecklist), attribute.class("action-button")],
+        [
+          event.on_click(AddChecklist),
+          attribute.class(
+            "bg-surface0 text-text hover:bg-surface1 rounded px-3 py-2 border border-surface1 cursor-pointer",
+          ),
+        ],
         [html.text("Add Checklist")],
       ),
       html.button(
-        [event.on_click(Download), attribute.class("action-button")],
+        [
+          event.on_click(Download),
+          attribute.class(
+            "bg-surface0 text-text hover:bg-surface1 rounded px-3 py-2 border border-surface1 cursor-pointer",
+          ),
+        ],
         [html.text("Download")],
       ),
       html.button(
-        [event.on_click(Load), attribute.class("action-button")],
+        [
+          event.on_click(Load),
+          attribute.class(
+            "bg-surface0 text-text hover:bg-surface1 rounded px-3 py-2 border border-surface1 cursor-pointer",
+          ),
+        ],
         [html.text("Load/Restore")],
       ),
     ]),
@@ -85,11 +112,17 @@ fn checklist_view(model: Model, id: Int) -> Element(Msg) {
           let links =
             list.map(item.links, fn(link) {
               html.li([], [
-                html.a([attribute.href(link.url)], [html.text(link.name)]),
+                html.a(
+                  [
+                    attribute.href(link.url),
+                    attribute.class("text-blue hover:text-sapphire"),
+                  ],
+                  [html.text(link.name)],
+                ),
               ])
             })
-          html.li([], [
-            html.label([], [
+          html.li([attribute.class("py-1")], [
+            html.label([attribute.class("flex items-center gap-2")], [
               html.input([
                 attribute.type_("checkbox"),
                 attribute.checked(is_checked),
@@ -101,27 +134,32 @@ fn checklist_view(model: Model, id: Int) -> Element(Msg) {
             ]),
             case links {
               [] -> html.text("")
-              _ -> html.ul([], links)
+              _ -> html.ul([attribute.class("ml-6 mt-1")], links)
             },
           ])
         })
 
       html.div([], [
         header_el(),
-        html.main([attribute.class("main-content")], [
-          html.h2([attribute.class("checklist-title")], [
+        html.main([attribute.class("flex flex-col p-5 gap-3")], [
+          html.h2([attribute.class("m-0 text-subtext1")], [
             html.text(checklist.name),
           ]),
-          html.ul([], items),
+          html.ul([attribute.class("list-none p-0 m-0")], items),
           html.input([
             attribute.type_("text"),
             attribute.value(model.name),
             event.on_input(SetName),
+            attribute.class(
+              "bg-surface0 text-text border border-surface1 rounded px-3 py-2 outline-none focus:border-mauve",
+            ),
           ]),
           html.button(
             [
               event.on_click(AddItem(checklist.id)),
-              attribute.class("action-button"),
+              attribute.class(
+                "bg-surface0 text-text hover:bg-surface1 rounded px-3 py-2 border border-surface1 cursor-pointer",
+              ),
             ],
             [html.text("Add Item")],
           ),
@@ -133,5 +171,10 @@ fn checklist_view(model: Model, id: Int) -> Element(Msg) {
 }
 
 fn not_found_view() -> Element(Msg) {
-  html.div([], [header_el(), html.main([], [html.text("404 - Page Not Found")])])
+  html.div([], [
+    header_el(),
+    html.main([attribute.class("flex flex-col p-5 text-subtext0")], [
+      html.text("404 - Page Not Found"),
+    ]),
+  ])
 }

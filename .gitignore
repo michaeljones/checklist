@@ -10,3 +10,5 @@ node_modules
 #Added automatically by Lustre Dev Tools
 /.lustre
 /dist
+
+/assets/static/output.css
