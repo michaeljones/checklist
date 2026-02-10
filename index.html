@@ -1,2 +1,35 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1" name="viewport"><!-- lustre:fragment --><!-- /lustre:fragment --><title>checklist</title><!-- lustre:fragment --><!-- /lustre:fragment --><!-- lustre:fragment --><link href="/checklist/static/output.css" rel="stylesheet"><!-- /lustre:fragment --><!-- lustre:fragment --><!-- /lustre:fragment --><script src="/checklist/checklist.js" type="module"></script></head><body><div id="app"></div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+
+    <title>Checklist</title>
+
+    <link rel="manifest" href="./manifest.json">
+    <link rel="shortcut icon" href="./recurring-192.png">
+    <link rel="icon" sizes="192x192" href="./recurring-192.png">
+    <link rel="stylesheet" href="/checklist/static/output.css">
+
+    <script src="/checklist/checklist.js" type="module"></script>
+
+    <script>
+      // GitHub Pages SPA redirect support
+      (function() {
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== location.href) {
+          history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
+</head>
+<body>
+    <noscript>
+        You need to enable JavaScript to run this app.
+    </noscript>
+    <div id="app"></div>
+</body>
+</html>
